@@ -1,0 +1,49 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
+
+:root {
+  --bg: #f3f8fa;
+  --title: #062134;
+  --text: #24445a;
+  --text-soft: #42617a;
+  --brand: #0f766e;
+  --brand-muted: rgba(15, 118, 110, 0.15);
+  --panel-bg: rgba(255, 255, 255, 0.94);
+  --panel-border: rgba(12, 58, 83, 0.14);
+  --panel-shadow: 0 12px 30px rgba(8, 28, 46, 0.06);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  font-family: 'IBM Plex Sans', 'Segoe UI', sans-serif;
+  color: var(--text);
+  background:
+    radial-gradient(90% 65% at 100% 0%, rgba(144, 217, 219, 0.2), transparent 58%),
+    radial-gradient(80% 70% at 0% 0%, rgba(189, 230, 245, 0.32), transparent 58%),
+    var(--bg);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: 'Manrope', 'Segoe UI', sans-serif;
+  color: var(--title);
+}
+
+img {
+  max-width: 100%;
+}
