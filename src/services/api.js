@@ -1,10 +1,12 @@
 import axios from 'axios'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+const HEALTH_TIMEOUT_MS = 15000
+const PREDICTION_TIMEOUT_MS = 120000
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 60000,
+  timeout: PREDICTION_TIMEOUT_MS,
 })
 
 function normalizeApiError(error) {
@@ -15,8 +17,8 @@ function normalizeApiError(error) {
       : detail.message || 'Prediction request failed.'
   }
 
-  if (error.code === 'ECONNABORTED') {
-    return 'Request timed out. Please try again.'
+  if (error.code === 'ECONNABORTED' || error.code === 'ETIMEDOUT') {
+    return 'The AI server is waking up or processing the X-ray. Please wait and try again.'
   }
 
   if (error.message === 'Network Error') {
@@ -27,7 +29,7 @@ function normalizeApiError(error) {
 }
 
 export async function checkHealth() {
-  const response = await apiClient.get('/health')
+  const response = await apiClient.get('/health', { timeout: HEALTH_TIMEOUT_MS })
   return response.data
 }
 

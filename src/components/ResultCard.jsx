@@ -45,7 +45,7 @@ export function ResultCard({ result, loading }) {
       {loading ? (
         <div className="loading-state" role="status" aria-live="polite">
           <LoaderCircle size={24} className="spin" />
-          <p>Analyzing X-ray...</p>
+          <p>Analyzing X-ray... This may take up to 1–2 minutes on the free server.</p>
         </div>
       ) : !result ? (
         <div className="empty-state">

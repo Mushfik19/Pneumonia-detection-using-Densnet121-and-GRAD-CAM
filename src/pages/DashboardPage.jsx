@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Header } from '../components/Header'
 import { UploadCard } from '../components/UploadCard'
 import { ResultCard } from '../components/ResultCard'
@@ -58,6 +58,7 @@ export function DashboardPage() {
   const [loading, setLoading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
   const [toasts, setToasts] = useState([])
+  const predictionInFlight = useRef(false)
   const { history, addEntry, clearHistory } = useLocalHistory()
 
   const disclaimer = useMemo(
@@ -150,11 +151,16 @@ export function DashboardPage() {
   }
 
   async function handleAnalyze() {
+    if (predictionInFlight.current) {
+      return
+    }
+
     if (!selectedFile) {
       addToast('error', 'Select an X-ray image before running analysis.')
       return
     }
 
+    predictionInFlight.current = true
     setLoading(true)
     setUploadProgress(0)
 
@@ -176,6 +182,7 @@ export function DashboardPage() {
     } catch (error) {
       addToast('error', error.message)
     } finally {
+      predictionInFlight.current = false
       setLoading(false)
     }
   }
@@ -229,9 +236,10 @@ export function DashboardPage() {
         </button>
 
         {loading ? (
-          <p className="upload-progress" aria-live="polite">
-            Upload Progress: {uploadProgress}%
-          </p>
+          <div className="analysis-status" aria-live="polite">
+            <p>Analyzing X-ray... This may take up to 1–2 minutes on the free server.</p>
+            <p className="upload-progress">Upload Progress: {uploadProgress}%</p>
+          </div>
         ) : null}
       </div>
 
