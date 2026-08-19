@@ -1,11 +1,11 @@
 from dataclasses import dataclass
 import logging
+import threading
 
 import numpy as np
 from PIL import Image
 
 from .config import Settings
-from .gradcam import GradCamGenerator
 from .model import DenseNet121Adapter
 
 logger = logging.getLogger(__name__)
@@ -31,12 +31,16 @@ class PredictionService:
         self.settings = settings
         self.adapter: DenseNet121Adapter | None = None
         self.model_error: str | None = None
+        self._inference_lock = threading.Lock()
 
     @property
     def model_loaded(self) -> bool:
         return self.adapter is not None
 
     def load_model(self) -> None:
+        if self.adapter is not None:
+            return
+
         try:
             self.adapter = DenseNet121Adapter(
                 model_path=self.settings.model_path,
@@ -56,13 +60,13 @@ class PredictionService:
             )
         return self.adapter
 
-    def _preprocess(self, image: Image.Image) -> tuple[np.ndarray, np.ndarray]:
+    def _preprocess(self, image: Image.Image) -> np.ndarray:
         resized = image.resize((self.settings.input_width, self.settings.input_height))
-        image_np = np.array(resized, dtype=np.float32)
+        image_np = np.asarray(resized, dtype=np.float32)
         # The supplied model was trained with ImageDataGenerator(rescale=1./255),
         # not DenseNet's preprocess_input. Preserve that exact inference contract.
-        preprocessed = np.expand_dims(image_np / 255.0, axis=0)
-        return preprocessed, image_np.astype(np.uint8)
+        image_np *= 1.0 / 255.0
+        return np.expand_dims(image_np, axis=0)
 
     @staticmethod
     def _extract_probabilities(raw_output: np.ndarray) -> tuple[float, float, int]:
@@ -93,38 +97,56 @@ class PredictionService:
         raise ValueError('Unexpected model output shape. Expected scalar sigmoid or two-class vector.')
 
     def predict(self, image: Image.Image) -> PredictionResult:
-        adapter = self._ensure_loaded()
-        preprocessed, resized_rgb = self._preprocess(image)
+        with self._inference_lock:
+            adapter = self._ensure_loaded()
+            preprocessed = self._preprocess(image)
+            raw_output = None
 
-        raw_output = adapter.predict(preprocessed)
-        pneumonia_probability, normal_probability, gradcam_class_index = self._extract_probabilities(raw_output)
+            try:
+                raw_output = adapter.predict(preprocessed)
+                pneumonia_probability, normal_probability, gradcam_class_index = (
+                    self._extract_probabilities(raw_output)
+                )
 
-        is_positive = pneumonia_probability >= self.settings.positive_threshold
-        prediction_label = 'Pneumonia Detected' if is_positive else 'Normal'
-        predicted_class = 'pneumonia' if is_positive else 'normal'
-        confidence = pneumonia_probability if is_positive else normal_probability
+                is_positive = pneumonia_probability >= self.settings.positive_threshold
+                prediction_label = 'Pneumonia Detected' if is_positive else 'Normal'
+                predicted_class = 'pneumonia' if is_positive else 'normal'
+                confidence = pneumonia_probability if is_positive else normal_probability
 
-        gradcam_available = False
-        gradcam_base64 = None
+                gradcam_available = False
+                gradcam_base64 = None
 
-        try:
-            gradcam = GradCamGenerator(adapter.keras_model)
-            gradcam_image = gradcam.generate(preprocessed, resized_rgb, gradcam_class_index)
+                if self.settings.enable_gradcam:
+                    try:
+                        from .gradcam import GradCamGenerator
+                        from .utils import pil_to_base64_png
 
-            from .utils import pil_to_base64_png
+                        resized_rgb = np.asarray(
+                            image.resize((self.settings.input_width, self.settings.input_height)),
+                            dtype=np.uint8,
+                        )
+                        gradcam = GradCamGenerator(adapter.keras_model)
+                        gradcam_image = gradcam.generate(
+                            preprocessed,
+                            resized_rgb,
+                            gradcam_class_index,
+                        )
+                        gradcam_base64 = pil_to_base64_png(gradcam_image)
+                        gradcam_available = True
+                        del gradcam_image, gradcam, resized_rgb
+                    except Exception:
+                        logger.exception('Grad-CAM generation failed; returning prediction only.')
 
-            gradcam_base64 = pil_to_base64_png(gradcam_image)
-            gradcam_available = True
-        except Exception:
-            gradcam_available = False
-            gradcam_base64 = None
-
-        return PredictionResult(
-            prediction=prediction_label,
-            predicted_class=predicted_class,
-            pneumonia_probability=round(pneumonia_probability, 4),
-            normal_probability=round(normal_probability, 4),
-            confidence=round(confidence, 4),
-            gradcam_available=gradcam_available,
-            gradcam_image_base64=gradcam_base64,
-        )
+                return PredictionResult(
+                    prediction=prediction_label,
+                    predicted_class=predicted_class,
+                    pneumonia_probability=round(pneumonia_probability, 4),
+                    normal_probability=round(normal_probability, 4),
+                    confidence=round(confidence, 4),
+                    gradcam_available=gradcam_available,
+                    gradcam_image_base64=gradcam_base64,
+                )
+            finally:
+                del preprocessed
+                if raw_output is not None:
+                    del raw_output

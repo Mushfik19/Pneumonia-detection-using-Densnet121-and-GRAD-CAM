@@ -45,4 +45,5 @@ class DenseNet121Adapter:
         return self._model
 
     def predict(self, image_batch: np.ndarray) -> np.ndarray:
-        return self._model.predict(image_batch, verbose=0)
+        predictions = self._model(image_batch, training=False)
+        return predictions.numpy()
