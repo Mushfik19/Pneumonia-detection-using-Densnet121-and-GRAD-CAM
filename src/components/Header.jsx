@@ -1,6 +1,6 @@
-import { ActivitySquare, LogOut, ShieldAlert, UserRound, Wifi } from 'lucide-react'
+import { ActivitySquare, ShieldAlert, Wifi } from 'lucide-react'
 
-export function Header({ healthStatus, user, onLogin, onLogout }) {
+export function Header({ healthStatus }) {
   const online = healthStatus?.status === 'ok' || healthStatus?.server === 'ok'
   const modelLoaded = healthStatus?.model_loaded
 
@@ -25,14 +25,6 @@ export function Header({ healthStatus, user, onLogin, onLogout }) {
           <ShieldAlert size={14} aria-hidden="true" />
           {modelLoaded ? 'Model Ready' : 'Model Not Loaded'}
         </span>
-        {user ? (
-          <>
-            <span className="user-pill"><span className="avatar">{user.initials}</span>{user.name}</span>
-            <button type="button" className="header-action logout-action" onClick={onLogout}><LogOut size={14} /> Logout</button>
-          </>
-        ) : (
-          <button type="button" className="header-action" onClick={onLogin}><UserRound size={14} /> Login</button>
-        )}
       </div>
     </header>
   )

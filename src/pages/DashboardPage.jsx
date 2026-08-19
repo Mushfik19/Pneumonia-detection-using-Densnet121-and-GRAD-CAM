@@ -7,9 +7,7 @@ import { HistoryPanel } from '../components/HistoryPanel'
 import { ToastRegion } from '../components/ToastRegion'
 import { ErrorBoundary } from '../components/ErrorBoundary'
 import { Footer } from '../components/Footer'
-import { LoginModal } from '../components/LoginModal'
 import { useLocalHistory } from '../hooks/useLocalHistory'
-import { useSessionAuth } from '../hooks/useSessionAuth'
 import { checkHealth, predictXray } from '../services/api'
 import { validateImageFile } from '../utils/fileValidation'
 
@@ -60,10 +58,7 @@ export function DashboardPage() {
   const [loading, setLoading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
   const [toasts, setToasts] = useState([])
-  const [loginOpen, setLoginOpen] = useState(false)
-
   const { history, addEntry, clearHistory } = useLocalHistory()
-  const { user, signIn, signOut } = useSessionAuth()
 
   const disclaimer = useMemo(
     () =>
@@ -192,20 +187,10 @@ export function DashboardPage() {
     addToast('info', 'Loaded a previous analysis result.')
   }
 
-  function handleLogin({ email }) {
-    signIn({ email })
-    addToast('success', 'Local development session started.')
-  }
-
-  function handleLogout() {
-    signOut()
-    addToast('info', 'You have been logged out of the local session.')
-  }
-
   return (
     <>
     <div className="app-shell" id="top">
-      <Header healthStatus={healthStatus} user={user} onLogin={() => setLoginOpen(true)} onLogout={handleLogout} />
+      <Header healthStatus={healthStatus} />
 
       <section className="hero-section">
         <p className="kicker">Intelligent Pneumonia Screening from Chest X-Rays</p>
@@ -264,7 +249,6 @@ export function DashboardPage() {
       <ToastRegion toasts={toasts} />
     </div>
       <Footer />
-      {loginOpen ? <LoginModal onClose={() => setLoginOpen(false)} onSignIn={handleLogin} /> : null}
     </>
   )
 }

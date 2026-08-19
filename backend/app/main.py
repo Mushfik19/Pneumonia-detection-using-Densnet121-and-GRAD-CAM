@@ -1,9 +1,8 @@
-from fastapi import Depends, FastAPI, File, Header, HTTPException, UploadFile
+from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from .config import settings
-from .auth import LoginPayload, RegisterPayload, current_user, init_auth_db, login, logout, register
 from .predictor import ModelNotLoadedError, PredictionService
 from .schemas import HealthResponse, PredictionResponse
 from .utils import (
@@ -27,24 +26,7 @@ app.add_middleware(
 
 @app.on_event('startup')
 def startup_event() -> None:
-    init_auth_db()
     service.load_model()
-
-@app.post('/auth/register')
-def auth_register(payload: RegisterPayload):
-    user = register(payload); token, user = login(LoginPayload(email=user['email'], password=payload.password))
-    return {'message': 'Account created successfully', 'access_token': token, 'token_type': 'bearer', 'user': user}
-
-@app.post('/auth/login')
-def auth_login(payload: LoginPayload):
-    token, user = login(payload)
-    return {'access_token': token, 'token_type': 'bearer', 'user': user}
-
-@app.get('/auth/me')
-def auth_me(user: dict = Depends(current_user)): return {'user': user}
-
-@app.post('/auth/logout', status_code=204)
-def auth_logout(authorization: str | None = Header(default=None)): logout(authorization)
 
 
 @app.get('/health', response_model=HealthResponse)
@@ -59,7 +41,7 @@ def health() -> dict:
 
 
 @app.post('/predict', response_model=PredictionResponse)
-async def predict(image: UploadFile = File(...), user: dict = Depends(current_user)) -> JSONResponse:
+async def predict(image: UploadFile = File(...)) -> JSONResponse:
     try:
         sanitized_name = sanitize_filename(image.filename or 'upload.png')
         validate_file_metadata(sanitized_name, image.content_type or '')
