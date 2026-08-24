@@ -60,6 +60,7 @@ async def predict(image: UploadFile = File(...)) -> JSONResponse:
             'confidence': prediction.confidence,
             'gradcam_available': prediction.gradcam_available,
             'gradcam_image_base64': prediction.gradcam_image_base64,
+            'gradcam': prediction.gradcam_image_base64,
         }
         return JSONResponse(content=payload)
 

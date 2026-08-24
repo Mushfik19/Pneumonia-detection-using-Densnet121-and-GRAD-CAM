@@ -443,7 +443,17 @@
   border-radius: 12px;
   overflow: hidden;
   border: 1px solid var(--panel-border);
-  background: #fff;
+  background: #0f172a;
+  position: relative;
+}
+
+.single-view {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 280px;
+  background: #0b1523;
 }
 
 .gradcam-stage img {
@@ -451,6 +461,85 @@
   max-height: 460px;
   object-fit: contain;
   display: block;
+}
+
+.view-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: rgba(11, 21, 35, 0.75);
+  backdrop-filter: blur(6px);
+  color: #e2e8f0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  letter-spacing: 0.03em;
+}
+
+.split-view {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 12px;
+  background: #0b1523;
+}
+
+.split-col {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.split-label {
+  color: #cbd5e1;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-align: center;
+  letter-spacing: 0.03em;
+  background: rgba(255, 255, 255, 0.06);
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+.split-col img {
+  width: 100%;
+  max-height: 380px;
+  object-fit: contain;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #000;
+}
+
+@media (max-width: 640px) {
+  .split-view {
+    grid-template-columns: 1fr;
+  }
+}
+
+.gradcam-caption {
+  margin-top: 10px;
+  padding: 10px 12px;
+  background: rgba(15, 118, 110, 0.08);
+  border: 1px solid rgba(15, 118, 110, 0.22);
+  border-radius: 10px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 0.82rem;
+  color: var(--text-soft);
+  line-height: 1.45;
+}
+
+.gradcam-caption .info-icon {
+  color: #0f766e;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.gradcam-caption p {
+  margin: 0;
 }
 
 .history-list {

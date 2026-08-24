@@ -9,6 +9,7 @@ class PredictionResponse(BaseModel):
     confidence: float
     gradcam_available: bool
     gradcam_image_base64: str | None = None
+    gradcam: str | None = None
 
 
 class HealthResponse(BaseModel):

@@ -23,7 +23,7 @@ class Settings:
     input_width: int = int(os.getenv('MODEL_INPUT_WIDTH', '224'))
     input_height: int = int(os.getenv('MODEL_INPUT_HEIGHT', '224'))
     positive_threshold: float = float(os.getenv('PNEUMONIA_THRESHOLD', '0.5'))
-    enable_gradcam: bool = os.getenv('ENABLE_GRADCAM', 'false').lower() in {
+    enable_gradcam: bool = os.getenv('ENABLE_GRADCAM', 'true').lower() in {
         '1',
         'true',
         'yes',
